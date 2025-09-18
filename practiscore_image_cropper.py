@@ -75,31 +75,6 @@ def crop_and_save(img, output_folder, player_name, start_stage):
     if (found_stages < 1):
         print("No stages found!")
 
-def test():
-    # https://pillow.readthedocs.io/en/stable/reference/Image.html
-    from PIL import Image
-    photo = Image.open('C:/Temp/ttt.png') #your image
-    photo = photo.convert('RGB')
-    RED = (255, 0, 0)
-    GREEN = (0, 255, 0)
-    BLUE = (0, 0, 255)
-
-    width = photo.size[0] #define W and H
-    height = photo.size[1]
-
-    for y in range(0, height): #each pixel has coordinates
-        row = ""
-        for x in range(0, width):
-            RGB = photo.getpixel((x,y))
-            R,G,B = RGB  #now you can use the RGB value
-            print(RGB)
-            if (RGB == RED):
-                print('red')
-            if (RGB == GREEN):
-                print('green')
-            if (RGB == BLUE):
-                print('blue')
-
 def main():
     """Main Function"""
 
