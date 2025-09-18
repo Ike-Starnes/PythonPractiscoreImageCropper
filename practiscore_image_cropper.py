@@ -20,35 +20,46 @@ def save_image_to_file(img, filename):
 
 
 def crop_and_save(img, output_folder, player_name, start_stage):
-    #STAGE_HEADER_COLOR = (0x88, 0x88, 0x88)
-    #STAGE_BACK_COLOR = (0xEE, 0xEE, 0xEE)
-    STAGE_HEADER_COLOR = 0x88
-    STAGE_BACK_COLOR = 0xEE
-    MAX_STAGE_HEIGHT = 275
+    STAGE_HEADER_COLOR = 0xEE
+    STAGE_BACK_COLOR = 0xFF
 
     stage = start_stage
 
     img_height = img.shape[0]
-    #img_width = img.shape[1]
+    found_stages = 0
 
     row = 0
     while row < img_height:
         imgrow = img[row]
+        imgrownext = img[row+1]
 
         if (imgrow[0][0] == STAGE_HEADER_COLOR) and (imgrow[1][0] == STAGE_HEADER_COLOR): # Found start of stage header
+            if ( (imgrownext[0][0] != STAGE_HEADER_COLOR) and (imgrownext[1][0] != STAGE_HEADER_COLOR)): # Actually found that blurry bit at the top after a scrolled screenshot (i.e. 2+ pages of stages)
+                row = row + 3
+                continue
+
             first_row = row
             stage_height = 0
-            while (imgrow[0][0] == STAGE_HEADER_COLOR) and (imgrow[1][0] == STAGE_HEADER_COLOR): # While inside stage header, keep going
+
+            while ((row < img_height) and imgrow[0][0] == STAGE_HEADER_COLOR) and (imgrow[1][0] == STAGE_HEADER_COLOR): # While inside stage header, keep going
                 row = row + 1
+                if(row == img_height): break
                 imgrow = img[row]
-            while (imgrow[0][0] == STAGE_BACK_COLOR) and (imgrow[1][0] == STAGE_BACK_COLOR): # Now we have found the stage info area, keep going until we reach next stage header
+
+            while ((row < img_height) and imgrow[0][0] != STAGE_BACK_COLOR) and (imgrow[1][0] != STAGE_BACK_COLOR): # Skip ahead to stage info
                 row = row + 1
+                if(row == img_height): break
+                imgrow = img[row]
+
+            while ((row < img_height) and imgrow[0][0] == STAGE_BACK_COLOR) and (imgrow[1][0] == STAGE_BACK_COLOR): # We have found the stage info
+                row = row + 1
+                if(row == img_height): break
                 stage_height = row - first_row
-                if (stage_height > MAX_STAGE_HEIGHT):
-                    break
                 imgrow = img[row]
+                
             last_row = row - 1
             print('Found stage {} at {} to {} with height = {}'.format(stage, first_row, last_row, stage_height))
+            found_stages = found_stages + 1
 
             # Copy the stage data into a new bitmap
             stageimg = img[first_row:last_row]
@@ -60,6 +71,9 @@ def crop_and_save(img, output_folder, player_name, start_stage):
             stage = stage + 1
         else:
             row = row + 1
+
+    if (found_stages < 1):
+        print("No stages found!")
 
 def test():
     # https://pillow.readthedocs.io/en/stable/reference/Image.html
@@ -89,6 +103,8 @@ def test():
 def main():
     """Main Function"""
 
+    # -i C:/Temp/TT/1.jpg -o C:/Temp/TT -p Ike -ss 1
+    # -i C:/Temp/TT/2.jpg -o C:/Temp/TT -p Ike -ss 4
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--in-file', dest='input_file', required=True, help='Input filename')
     parser.add_argument('-o', '--out-folder', dest='output_folder', required=True, help='Output folder')
